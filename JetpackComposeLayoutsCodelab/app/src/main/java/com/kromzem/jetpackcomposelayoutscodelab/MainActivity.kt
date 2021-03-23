@@ -3,10 +3,7 @@ package com.kromzem.jetpackcomposelayoutscodelab
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -16,16 +13,15 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kromzem.jetpackcomposelayoutscodelab.ui.theme.JetpackComposeLayoutsCodelabTheme
+import dev.chrisbanes.accompanist.coil.CoilImage
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,12 +106,37 @@ fun BodyContent(modifier: Modifier = Modifier) {
 
 @Composable
 fun SimpleList(modifier: Modifier = Modifier) {
+    val listSize = 100
     val scrollState = rememberLazyListState()
-    
-    LazyColumn(state = scrollState) {
-        items(100) {
-            Text(text = "Item #$it")
+    val coroutineScope = rememberCoroutineScope()
+
+    Row {
+        Button(onClick = { coroutineScope.launch { scrollState.animateScrollToItem(0) } }) {
+            Text(text = "Scroll to top")
         }
+
+        Button(onClick = { coroutineScope.launch { scrollState.animateScrollToItem(listSize - 1) } }) {
+            Text(text = "Scroll to bottom")
+        }
+    }
+
+    LazyColumn(state = scrollState) {
+        items(listSize) {
+            ImageListItem(index = it)
+        }
+    }
+}
+
+@Composable
+fun ImageListItem(index: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        CoilImage(
+            data = "https://developer.android.com/images/brand/Android_Robot.png",
+            contentDescription = "Android Logo",
+            modifier = Modifier.size(50.dp)
+        ) 
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(text = "Item #$index", style = MaterialTheme.typography.subtitle1)
     }
 }
 
