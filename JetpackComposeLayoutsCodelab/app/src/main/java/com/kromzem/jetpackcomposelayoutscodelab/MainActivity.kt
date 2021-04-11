@@ -6,9 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -16,8 +14,13 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.AlignmentLine
+import androidx.compose.ui.layout.FirstBaseline
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kromzem.jetpackcomposelayoutscodelab.ui.theme.JetpackComposeLayoutsCodelabTheme
 import dev.chrisbanes.accompanist.coil.CoilImage
@@ -134,9 +137,44 @@ fun ImageListItem(index: Int) {
             data = "https://developer.android.com/images/brand/Android_Robot.png",
             contentDescription = "Android Logo",
             modifier = Modifier.size(50.dp)
-        ) 
+        )
         Spacer(modifier = Modifier.width(10.dp))
         Text(text = "Item #$index", style = MaterialTheme.typography.subtitle1)
+    }
+}
+
+fun Modifier.firstBaselineToTop(firstBaselineToTop: Dp) = Modifier.layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+
+    check(placeable[FirstBaseline] != AlignmentLine.Unspecified)
+
+    val firstBaseline = placeable[FirstBaseline]
+
+    val placeableY = firstBaselineToTop.roundToPx() - firstBaseline
+    val height = placeable.height + placeableY
+    layout(placeable.width, height) {
+        placeable.placeRelative(0, placeableY)
+    }
+}
+
+@Composable
+fun MyOwnColumn(
+    modifier: Modifier,
+    content: @Composable () -> Unit
+) {
+    Layout(content = content, modifier = modifier) { measueables, constraints ->
+        val placeables = measueables.map {
+            it.measure(constraints)
+        }
+
+        var yPosition = 0
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            placeables.forEach {
+                it.placeRelative(0, yPosition)
+
+                yPosition += it.height
+            }
+        }
     }
 }
 
@@ -153,5 +191,34 @@ fun PhotographerCardPreview() {
 fun LayoutsCodelabPreview() {
     JetpackComposeLayoutsCodelabTheme {
         LayoutsCodelab()
+    }
+}
+
+@Preview
+@Composable
+fun TextWithPaddingToBaselinePreview() {
+    JetpackComposeLayoutsCodelabTheme {
+        Text("Hi there!", Modifier.firstBaselineToTop(32.dp))
+    }
+}
+
+@Preview
+@Composable
+fun TextWithNormalPaddingPreview() {
+    JetpackComposeLayoutsCodelabTheme {
+        Text("Hi there!", Modifier.padding(top = 32.dp))
+    }
+}
+
+@Preview
+@Composable
+fun MyOwnColumnInAction() {
+    JetpackComposeLayoutsCodelabTheme() {
+        MyOwnColumn(modifier = Modifier) {
+            Text("MyOwnColumn")
+            Text("places items")
+            Text("vertically.")
+            Text("We've done it by hand!")
+        }
     }
 }
